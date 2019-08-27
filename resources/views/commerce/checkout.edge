@@ -1,0 +1,40 @@
+@layout('layouts.main')
+
+@section('content')
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-4">
+        <div class="card text-center mt-5 mx-3">
+          <div class="card-body">
+            <img src="{{ assetsUrl('wxpay.png') }}" alt="" class="w-50">
+            <div class="card-price my-5 pb-5">
+              <p class="card-amount"><small>￥</small>0.03</p>
+              <p class="card-text text-muted"><small>订单金额</small></p>
+            </div>
+            <button data-csrf="{{ csrfToken }}" id="pay" class="btn btn-primary btn-block">确认支付</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="modal-query">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">支付结果</h5>
+          <button class="close" type="button" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>支付完成以后，请再确定一下支付结果。</p>
+        </div>
+        <div class="modal-footer">
+          <button id="order-query" class="btn btn-primary btn-block" data-csrf="{{ csrfToken }}">
+            支付成功
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+@endsection
