@@ -13,6 +13,7 @@
 |
 */
 
+const Database = use('Database')
 const Route = use('Route')
 
 Route.on('/').render('welcome')
@@ -23,6 +24,12 @@ Route.post('wxpay/notify', 'CheckoutController.wxPayNotify')
 
 Route.post('checkout/pay', 'CheckoutController.pay')
 
+Route.get('/jscode2session', 'CheckoutController.jscodeToSession')
+
 Route.get('checkout/completed', 'CheckoutController.completed')
 
 Route.post('checkout/query', 'CheckoutController.query')
+
+Route.get('/order', async () => {
+  return await Database.table('wp_orders').select('*')
+})

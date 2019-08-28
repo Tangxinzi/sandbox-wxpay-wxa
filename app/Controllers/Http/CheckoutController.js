@@ -2,6 +2,7 @@
 
 const logger       = use('App/Services/Logger')
 const Config       = use('Config')
+const Database     = use('Database')
 const moment       = use('moment')
 const randomString = use('randomstring')
 const queryString  = use('querystring')
@@ -119,6 +120,27 @@ class CheckoutController {
   }
 
   /**
+   * 请求调用返回用户 Session
+   *
+   * @param  {string}  code 登录凭证。
+   * @return {Object} 微信用户会话。
+   */
+  async jscodeToSession ({ request }) {
+    /**
+     * 登录凭证，
+     * 从小程序那里调用 wx.login 得到并发送到这里。
+     */
+    const code = request.input('code')
+    console.log(code);
+
+    /**
+     * 获取微信用户 openid。
+     */
+    const wxSession = await this.prePay(code)
+    return wxSession
+  }
+
+  /**
    * 支付。
    *
    * @param  {Object}  request 请求对象，用作读取请求头部数据。
@@ -138,7 +160,7 @@ class CheckoutController {
      * 获取微信用户 openid。
      */
     const wxSession = await this.prePay(code)
-    logger.debug('用户会话信息：', wxSession)
+    logger.debug('用户会话信息：\n', wxSession)
     const openid = wxSession.openid
 
     /** 公众账号 ID */
@@ -155,7 +177,10 @@ class CheckoutController {
     session.put('out_trade_no', out_trade_no)
 
     /** 商品描述 */
-    const body = 'ninghao'
+    const body = request.input('body')
+
+    /** 商品详情 */
+    const detail = request.input('detail')
 
     /** 商品价格 */
     const total_fee = request.input('total_fee')
@@ -167,7 +192,7 @@ class CheckoutController {
     const spbill_create_ip = request.header('x-real-ip')
 
     /** 商品 ID */
-    const product_id = 1
+    const product_id = request.input('product_id')
 
     /** 通知地址 */
     const notify_url = Config.get('wxpay.notify_url')
@@ -202,7 +227,7 @@ class CheckoutController {
      */
     const wxPayResponse = await axios.post(unifiedOrderApi, xmlOrder)
     const data = this.xmlToJS(wxPayResponse.data)
-    logger.debug(data)
+    logger.info('下单接口：\n', data)
 
     /**
      * JSAPI 参数
@@ -229,6 +254,9 @@ class CheckoutController {
      * 为前端返回 JSAPI 参数，
      * 根据这些参数，调用微信支付功能。
      */
+    logger.info('JSAPI 参数：\n', wxJSApiParams)
+    await Database.from('wp_orders')
+      .insert({ nonce_str: wxJSApiParams.nonceStr, openid: order.openid, product_id: order.product_id, body: order.body })
     return wxJSApiParams
   }
 
@@ -345,7 +373,7 @@ class CheckoutController {
    * @param  {Object} request 获取到支付结果通知里的数据。
    * @return 响应微信支付系统，验证的结果。
    */
-  wxPayNotify ({ request }) {
+  async wxPayNotify ({ request }) {
     logger.warn('处理支付结果通知 ------------------------')
 
     /**
@@ -363,7 +391,11 @@ class CheckoutController {
       return accumulator
     }, {})
 
-    logger.info('支付结果：', payment)
+    logger.info('支付结果：\n', payment)
+    await Database
+      .table('wp_orders')
+      .where({ nonce_str: payment.nonce_str, openid: payment.openid })
+      .update({ appid: payment.appid, transaction_id: payment.transaction_id, openid: payment.openid, mch_id: payment.mch_id, total_fee: payment.total_fee, result_code: payment.result_code, out_trade_no: payment.out_trade_no, time_end: payment.time_end, product_id: request.input('product_id'), body: request.input('body') })
 
     /**
      * 验证支付结果，

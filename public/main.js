@@ -40,7 +40,10 @@
       url: '/checkout/pay',
       method: 'POST',
       data: {
-        _csrf
+        _csrf,
+        total_fee: 3,
+        product_id: 1,
+        body: '测试支付'
       },
       success: (response) => {
         console.log(response)
