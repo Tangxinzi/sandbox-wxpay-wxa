@@ -194,6 +194,9 @@ class CheckoutController {
     /** 商品 ID */
     const product_id = request.input('product_id')
 
+    /** 讲师 ID */
+    const teacher_id = request.input('teacher_id')
+
     /** 通知地址 */
     const notify_url = Config.get('wxpay.notify_url')
 
@@ -214,6 +217,7 @@ class CheckoutController {
       total_fee,
       trade_type,
       product_id,
+      teacher_id,
       notify_url,
       nonce_str,
       spbill_create_ip,

@@ -30,6 +30,7 @@ Route.get('checkout/completed', 'CheckoutController.completed')
 
 Route.post('checkout/query', 'CheckoutController.query')
 
-Route.get('/order', async () => {
-  return await Database.table('wp_orders').select('*')
+Route.get('/order', async ({ request }) => {
+  const openid = request.input('openid')
+  return await Database.from('wp_orders').where({ openid })
 })
