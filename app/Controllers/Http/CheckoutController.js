@@ -188,9 +188,6 @@ class CheckoutController {
     /** 支付类型 */
     const trade_type = 'JSAPI'
 
-    /** 用户 IP */
-    const spbill_create_ip = request.header('x-real-ip')
-
     /** 商品 ID */
     const product_id = request.input('product_id')
 
@@ -216,11 +213,8 @@ class CheckoutController {
       body,
       total_fee,
       trade_type,
-      product_id,
-      teacher_id,
       notify_url,
       nonce_str,
-      spbill_create_ip,
       openid
     }
     const sign = this.wxPaySign(order, key)
@@ -260,7 +254,13 @@ class CheckoutController {
      */
     logger.info('JSAPI 参数：\n', wxJSApiParams)
     await Database.from('wp_orders')
-      .insert({ nonce_str: wxJSApiParams.nonceStr, openid: order.openid, product_id: order.product_id, body: order.body })
+      .insert({
+        nonce_str: wxJSApiParams.nonceStr,
+        openid: order.openid,
+        product_id,
+        teacher_id,
+        body: order.body
+      })
     return wxJSApiParams
   }
 
@@ -399,7 +399,19 @@ class CheckoutController {
     await Database
       .table('wp_orders')
       .where({ nonce_str: payment.nonce_str, openid: payment.openid })
-      .update({ appid: payment.appid, transaction_id: payment.transaction_id, openid: payment.openid, mch_id: payment.mch_id, total_fee: payment.total_fee, result_code: payment.result_code, out_trade_no: payment.out_trade_no, time_end: payment.time_end, product_id: request.input('product_id'), body: request.input('body') })
+      .update({
+        appid: payment.appid,
+        transaction_id: payment.transaction_id,
+        openid: payment.openid,
+        mch_id: payment.mch_id,
+        total_fee: payment.total_fee,
+        result_code: payment.result_code,
+        out_trade_no: payment.out_trade_no,
+        time_end: payment.time_end,
+        product_id: request.input('product_id'),
+        teacher_id: request.input('teacher_id'),
+        body: request.input('body')
+      })
 
     /**
      * 验证支付结果，
