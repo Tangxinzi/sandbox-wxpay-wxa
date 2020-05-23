@@ -31,6 +31,6 @@ Route.get('checkout/completed', 'CheckoutController.completed')
 Route.post('checkout/query', 'CheckoutController.query')
 
 Route.get('/order', async ({ request }) => {
-  const openid = request.input('openid')
-  return await Database.from('wp_orders').where({ openid })
+  // return await Database.from('wp_orders').where({ openid: request.input('openid'), result_code: 'SUCCESS' })
+  return await Database.from('wp_orders').whereRaw("openid = ? AND result_code = 'SUCCESS'  AND body LIKE ?", [request.input('openid'), '%' + request.input('word') + '%' || ''])
 })
